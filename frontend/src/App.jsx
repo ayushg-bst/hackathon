@@ -5,6 +5,7 @@ import CodeViewer from './components/CodeViewer'
 import SearchPanel from './components/SearchPanel'
 import QueryPanel from './components/QueryPanel'
 import DefinitionFinder from './components/DefinitionFinder'
+import FileSearchPanel from './components/FileSearchPanel';
 import './App.css'
 
 function App() {
@@ -14,6 +15,9 @@ function App() {
   const [forceRender, setForceRender] = useState(0);
   const [config, setConfig] = useState({ repo_path: '' });
   const [isQAPanelOpen, setIsQAPanelOpen] = useState(false); // Start closed
+  const [searchPanelVisible, setSearchPanelVisible] = useState(false);
+  const [previousSearchState, setPreviousSearchState] = useState(null);
+  const [fromSearch, setFromSearch] = useState(false);
 
   // Fetch configuration from backend
   useEffect(() => {
@@ -42,7 +46,7 @@ function App() {
     setSelectedFile(null);
   };
 
-  const handleFileSelect = async (filePath) => {
+  const handleFileSelect = async (filePath, fromSearchResults = true) => {
     // Check if the path is valid
     if (filePath === undefined || filePath === null) {
       return;
@@ -55,6 +59,16 @@ function App() {
     setForceRender(prev => prev + 1);
     setSelectedFile(cleanPath);
     setSelectedPosition({ start: 0, end: 0 });
+    
+    // If coming from search results, save search panel state
+    if (fromSearchResults && searchPanelVisible) {
+      setFromSearch(true);
+      // We don't hide search panel here to preserve state
+    } else {
+      // Close the search panel if not from search results
+      setSearchPanelVisible(false);
+      setFromSearch(false);
+    }
   };
 
   const handleSearchResultSelect = (filePath, startChar, endChar) => {
@@ -111,124 +125,80 @@ function App() {
     setSelectedPosition({ start: lineNumber, end: lineNumber });
   };
 
+  const handleBackToSearch = () => {
+    if (fromSearch) {
+      // Ensure search panel is visible
+      setSearchPanelVisible(true);
+      // Clear selected file
+      setSelectedFile(null);
+    } else {
+      // Just clear selected file if not from search
+      setSelectedFile(null);
+    }
+  };
+
   return (
     <div className="app-container">
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <h2>Repository Explorer</h2>
+      <header className="app-header">
+        <h1>Code Navigator</h1>
+        <div className="header-actions">
+          <button 
+            onClick={() => setSearchPanelVisible(!searchPanelVisible)} 
+            className={`action-button ${searchPanelVisible ? 'active' : ''}`}
+          >
+            {searchPanelVisible ? 'Hide Search' : 'Search'}
+          </button>
         </div>
-        <div className="sidebar-content">
-          <FileBrowser 
-            currentPath={currentPath}
-            onPathChange={handlePathChange}
-            onFileSelect={handleFileSelect}
-          />
-          <DefinitionFinder 
-            onDefinitionSelect={handleDefinitionSelect}
-            repoPath={config.repo_path}
-          />
-        </div>
-      </div>
-      
-      <div className="main-content">
-        <div className="main-header">
-          <h1>Code Navigator</h1>
+      </header>
+
+      <main className="app-content">
+        <div className="sidebar">
+          <div className="sidebar-header">
+            <h2>Repository Explorer</h2>
+          </div>
+          <div className="sidebar-content">
+            <FileBrowser 
+              currentPath={currentPath}
+              onPathChange={handlePathChange}
+              onFileSelect={handleFileSelect}
+            />
+            <DefinitionFinder 
+              onDefinitionSelect={handleDefinitionSelect}
+              repoPath={config.repo_path}
+            />
+          </div>
         </div>
         
-        <div className="main-body">
+        <div className="main-content">
+          {searchPanelVisible && (
+            <div className="search-panel-wrapper">
+              <FileSearchPanel onFileSelect={(filePath) => handleFileSelect(filePath, true)} />
+            </div>
+          )}
+
           {!selectedFile ? (
-            // When no file is selected, show search panel
-            <div className="search-container">
-              <SearchPanel 
-                onResultSelect={handleSearchResultSelect}
-                repoPath={config.repo_path}
-              />
-              
-              <div className="empty-state" style={{ marginTop: '20px' }}>
-                <div className="empty-state-icon">📁</div>
-                <p>Select a file from the file browser or search results to view its content</p>
-              </div>
+            <div className="empty-state">
+              <div className="empty-state-icon">📁</div>
+              <p>Select a file from the file browser or search results to view its content</p>
             </div>
           ) : (
-            // When a file is selected, show file view with column layout
-            <div className="main-content-column" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              flexGrow: 1,
-              height: '100%',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              backgroundColor: '#fff',
-              marginBottom: '24px',
-              position: 'relative'
-            }}>
-              {/* Header Section */}
-              <div className="main-content-header" style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                height: '40px',
-                padding: '0 15px',
-                borderBottom: '1px solid #ccc',
-                flexShrink: 0
-              }}>
-                <div>
-                  <strong>Selected File:</strong> {selectedFile}
-                </div>
-                <div style={{
-                  display: 'flex',
-                  gap: '10px'
-                }}>
-                  {/* Toggle button for QA Panel */}
-                  <button
-                    onClick={toggleQAPanel}
-                    style={{
-                      padding: '5px 10px',
-                      backgroundColor: '#1890ff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    {isQAPanelOpen ? '>> Hide Q&A' : '<< Ask AI'}
+            <div className="file-viewer-wrapper">
+              <div className="file-viewer-header">
+                <strong>Selected File:</strong> {selectedFile}
+                <div className="file-viewer-actions">
+                  <button onClick={toggleQAPanel} className="qa-toggle-button">
+                    {isQAPanelOpen ? 'Hide Q&A' : 'Ask AI'}
                   </button>
                   <button 
-                    onClick={() => setSelectedFile(null)}
-                    style={{
-                      padding: '5px 10px',
-                      backgroundColor: '#1890ff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
+                    onClick={handleBackToSearch} 
+                    className={`back-button ${fromSearch ? 'from-search' : ''}`}
                   >
-                    Back to Search
+                    {fromSearch ? 'Back to Search Results' : 'Back to Search'}
                   </button>
                 </div>
               </div>
-              
-              {/* Body Section - horizontal layout for code viewer and QA panel */}
-              <div className="main-content-body" style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexGrow: 1,
-                overflow: 'hidden',
-                minHeight: 0
-              }}>
-                {/* Code Viewer wrapper */}
-                <div className="file-view" style={{ 
-                  flexGrow: 1,
-                  flexShrink: 1,
-                  flexBasis: '0%',
-                  height: '100%',
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  transition: 'width 0.3s ease, flex-basis 0.3s ease'
-                }}>
+              <div className="file-viewer-body">
+                <div className={`code-viewer-container ${isQAPanelOpen ? 'panel-open' : 'panel-closed'}`}>
                   <CodeViewer 
                     key={selectedFile}
                     filePath={selectedFile} 
@@ -237,37 +207,18 @@ function App() {
                     repoPath={config.repo_path}
                   />
                 </div>
-                
-                {/* QA Panel wrapper div - conditionally sized based on isQAPanelOpen */}
-                <div style={{ 
-                  width: isQAPanelOpen ? '350px' : '0px', 
-                  flexShrink: 0, 
-                  transition: 'width 0.3s ease', 
-                  overflow: 'hidden', 
-                  height: '100%', 
-                  borderLeft: isQAPanelOpen ? '1px solid #ccc' : 'none',
-                  backgroundColor: '#f9f9f9'
-                }}>
-                  {/* Always render QueryPanel, but it will be hidden when width is 0 */}
-                  <div style={{ 
-                    width: '350px', 
-                    height: '100%', 
-                    overflowY: 'auto',
-                    padding: isQAPanelOpen ? '15px' : '0'
-                  }}>
-                    <QueryPanel 
-                      selectedFile={selectedFile}
-                      repoPath={config.repo_path}
-                    />
-                  </div>
-                </div>
+                <QueryPanel 
+                  selectedFile={selectedFile}
+                  repoPath={config.repo_path}
+                  className={isQAPanelOpen ? '' : 'collapsed'}
+                />
               </div>
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

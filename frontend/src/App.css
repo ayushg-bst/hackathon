@@ -14,31 +14,85 @@ body {
 /* App container - full height and width */
 .app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
-  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+/* App header styles */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #0066cc;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 8px 12px;
+  background-color: white;
+  color: #0066cc;
+  border: 1px solid white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.action-button:hover {
+  background-color: #0055aa;
+  color: white;
+}
+
+.action-button.active {
+  background-color: white;
+  color: #0055aa;
+  border-color: #0055aa;
+}
+
+/* App content styles */
+.app-content {
+  display: flex;
+  flex-grow: 1;
   overflow: hidden;
 }
 
 /* Sidebar styles */
 .sidebar {
-  width: 320px;
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
+  width: 300px;
+  background-color: #fff;
+  border-right: 1px solid #ddd;
+  padding: 10px 8px;
+  overflow-y: auto;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .sidebar-header {
-  padding: 16px;
+  padding: 10px 8px;
   border-bottom: 1px solid #f0f0f0;
   background-color: #f8f9fa;
 }
 
 .sidebar-header h2 {
+  margin: 0 0 15px;
+  font-size: 18px;
   color: #333;
-  font-size: 16px;
-  font-weight: 600;
 }
 
 .sidebar-content {
@@ -46,16 +100,16 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 10px;
+  padding: 8px 4px;
+  height: calc(100vh - 90px);
 }
 
 /* Main content styles */
 .main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
   background-color: #f8f9fa;
 }
 
@@ -94,6 +148,10 @@ body {
   margin-bottom: 16px;
 }
 
+.search-panel-wrapper {
+  margin-bottom: 20px;
+}
+
 /* File viewer styles */
 .file-view {
   flex: 1;
@@ -110,6 +168,76 @@ body {
   padding-bottom: 32px; /* Add extra padding at bottom */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px; /* Add margin at bottom */
+}
+
+.file-viewer-wrapper {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.file-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.file-viewer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.file-viewer-actions button {
+  padding: 6px 10px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.file-viewer-actions button:hover {
+  background-color: #0055aa;
+}
+
+.back-button.from-search {
+  background-color: #28a745; /* Green color to highlight that this returns to search results */
+}
+
+.back-button.from-search:hover {
+  background-color: #218838;
+}
+
+.file-viewer-body {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 180px);
+}
+
+/* Code viewer container that resizes based on panel state */
+.code-viewer-container {
+  flex: 1;
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+  width: 100%;
+}
+
+.code-viewer-container.panel-open {
+  width: calc(100% - 350px);
+}
+
+.code-viewer-container.panel-closed {
+  width: 100%;
 }
 
 /* Empty state */

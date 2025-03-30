@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './QueryPanel.css';
 
-const QueryPanel = ({ selectedFile }) => {
+const QueryPanel = ({ selectedFile, className = '' }) => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ const QueryPanel = ({ selectedFile }) => {
   };
 
   return (
-    <div className="query-panel">
+    <div className={`query-panel ${className}`}>
       <h3>Ask about the code</h3>
       
       <div className="query-form">
