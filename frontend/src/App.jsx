@@ -198,19 +198,20 @@ function App() {
                 </div>
               </div>
               <div className="file-viewer-body">
-                <CodeViewer 
-                  key={selectedFile}
-                  filePath={selectedFile} 
-                  highlightStart={selectedPosition.start}
-                  highlightEnd={selectedPosition.end}
-                  repoPath={config.repo_path}
-                />
-                {isQAPanelOpen && (
-                  <QueryPanel 
-                    selectedFile={selectedFile}
+                <div className={`code-viewer-container ${isQAPanelOpen ? 'panel-open' : 'panel-closed'}`}>
+                  <CodeViewer 
+                    key={selectedFile}
+                    filePath={selectedFile} 
+                    highlightStart={selectedPosition.start}
+                    highlightEnd={selectedPosition.end}
                     repoPath={config.repo_path}
                   />
-                )}
+                </div>
+                <QueryPanel 
+                  selectedFile={selectedFile}
+                  repoPath={config.repo_path}
+                  className={isQAPanelOpen ? '' : 'collapsed'}
+                />
               </div>
             </div>
           )}

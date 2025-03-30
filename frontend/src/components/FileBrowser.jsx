@@ -128,8 +128,13 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
   };
 
   return (
-    <div className="file-browser">
-      <div className="file-browser-header">
+    <div className="file-browser" style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: 'auto', 
+      minHeight: '90vh'
+    }}>
+      <div className="file-browser-header" style={{ flex: '0 0 auto' }}>
         <h3>File Browser</h3>
         <button 
           className="up-button"
@@ -140,7 +145,7 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
         </button>
       </div>
       
-      <div className="breadcrumbs">
+      <div className="breadcrumbs" style={{ flex: '0 0 auto' }}>
         {generateBreadcrumbs().map((crumb, index, array) => (
           <span key={crumb.path}>
             <span 
@@ -154,21 +159,29 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
         ))}
       </div>
 
-      {loading && <div className="loading">Loading...</div>}
+      {loading && <div className="loading" style={{ flex: '0 0 auto' }}>Loading...</div>}
       
       {error && (
-        <div className="error">
+        <div className="error" style={{ flex: '0 0 auto' }}>
           <p>Error: {error}</p>
         </div>
       )}
       
-      <ul className="file-list">
+      <ul className="file-list" style={{ 
+        height: 'auto',
+        maxHeight: 'unset',
+        minHeight: '70vh', 
+        overflow: 'visible',
+        display: 'block',
+        border: 'none'
+      }}>
         {items.length > 0 ? (
           items.map((item, index) => (
             <li 
               key={index} 
               className={`file-item ${item.is_dir ? 'directory' : 'file'}`}
               onClick={() => handleItemClick(item)}
+              style={{ padding: '3px 4px', fontSize: '12px', marginBottom: '1px' }}
             >
               <span className="file-icon">
                 {item.is_dir ? getDirIcon() : getFileIcon(item.name)}

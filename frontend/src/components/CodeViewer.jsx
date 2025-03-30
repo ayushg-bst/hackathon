@@ -14,9 +14,16 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     
-    // Check if content was already loaded BEFORE mount completed
+    // Check if content is available and set it
     if (codeContent) {
       editor.setValue(codeContent);
+      
+      // Explicitly tell Monaco to layout after setting content
+      setTimeout(() => {
+        editor.layout();
+        // Force refresh syntax highlighting
+        monaco.editor.setModelLanguage(editor.getModel(), language);
+      }, 100);
     }
   }
 
@@ -233,9 +240,11 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
       
       <div className="editor-container">
         <Editor
-          height="100%"
+          height="calc(90vh - 60px)"
           language={language}
           theme="vs-dark"
+          defaultValue={codeContent || ''} 
+          value={codeContent || ''}
           options={{
             readOnly: true,
             minimap: { enabled: true },
@@ -247,6 +256,16 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
             renderLineHighlight: 'all',
             highlightActiveIndentGuide: true,
             renderIndentGuides: true,
+            fixedOverflowWidgets: true,
+            scrollbar: {
+              vertical: 'auto',
+              horizontal: 'auto',
+              useShadows: true,
+              verticalHasArrows: false,
+              horizontalHasArrows: false,
+              alwaysConsumeMouseWheel: false
+            },
+            overviewRulerLanes: 0
           }}
           onMount={handleEditorDidMount}
         />

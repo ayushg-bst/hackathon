@@ -76,12 +76,15 @@ body {
   width: 300px;
   background-color: #fff;
   border-right: 1px solid #ddd;
-  padding: 15px;
+  padding: 10px 8px;
   overflow-y: auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
-  padding: 16px;
+  padding: 10px 8px;
   border-bottom: 1px solid #f0f0f0;
   background-color: #f8f9fa;
 }
@@ -97,8 +100,9 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 10px;
+  padding: 8px 4px;
+  height: calc(100vh - 90px);
 }
 
 /* Main content styles */
@@ -216,6 +220,24 @@ body {
   display: flex;
   flex-grow: 1;
   overflow: hidden;
+  position: relative;
+  height: calc(100vh - 180px);
+}
+
+/* Code viewer container that resizes based on panel state */
+.code-viewer-container {
+  flex: 1;
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+  width: 100%;
+}
+
+.code-viewer-container.panel-open {
+  width: calc(100% - 350px);
+}
+
+.code-viewer-container.panel-closed {
+  width: 100%;
 }
 
 /* Empty state */
