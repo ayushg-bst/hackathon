@@ -18,6 +18,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import sqlite3
 import pandas as pd
+from chromadb.config import Settings
+from chromadb import PersistentClient
+import shutil  # Add this to handle directory deletion
 
 # Configure logging
 logging.basicConfig(
@@ -41,6 +44,28 @@ if not os.path.isdir(REPO_PATH):
 # Ensure data directory exists
 data_dir = Path("data")
 data_dir.mkdir(exist_ok=True)
+
+# Ensure ChromaDB directory is recreated fresh
+CHROMA_DB_PATH = "chroma_db"
+chroma_db_dir = Path(CHROMA_DB_PATH)
+
+# Delete existing ChromaDB directory if it exists
+if chroma_db_dir.exists():
+    logger.info(f"Deleting existing ChromaDB directory: {CHROMA_DB_PATH}")
+    shutil.rmtree(chroma_db_dir)  # Deletes the directory and its contents
+
+# Create a fresh ChromaDB directory
+logger.info(f"Creating fresh ChromaDB directory: {CHROMA_DB_PATH}")
+chroma_db_dir.mkdir(exist_ok=True)
+
+# Initialize ChromaDB client
+logger.info(f"Initializing ChromaDB at {CHROMA_DB_PATH}...")
+chroma_client = PersistentClient(path=CHROMA_DB_PATH)
+
+# Ensure the collection exists
+COLLECTION_NAME = "code_embeddings"
+logger.info(f"Creating new collection: {COLLECTION_NAME}")
+embedding_collection = chroma_client.create_collection(COLLECTION_NAME)  # Always create a new collection
 
 # Initialize embedding model
 logger.info("Loading embedding model...")
@@ -194,16 +219,14 @@ def index_repository():
                     end_char = start_char + len(chunk)
                     
                     # Generate embedding
-                    embedding = model.encode(chunk)
+                    embedding = model.encode(chunk).tolist()
                     
-                    # Store in memory for batch processing
-                    all_embeddings.append({
-                        'file_path': rel_path,
-                        'content': chunk,
-                        'start_char': start_char,
-                        'end_char': end_char,
-                        'embedding': embedding.tobytes()
-                    })
+                    # Add embedding to ChromaDB collection
+                    embedding_collection.add(
+                        documents=[chunk],
+                        metadatas=[{"file_path": rel_path, "start_char": start_char, "end_char": end_char}],
+                        ids=[f"{rel_path}_{start_char}_{end_char}"]
+                    )
                     
                     processed_chunks += 1
                 
@@ -213,6 +236,9 @@ def index_repository():
                     
             except Exception as e:
                 logger.error(f"Error processing {rel_path}: {str(e)}")
+    
+    # Debug log: Check the number of embeddings in the collection
+    logger.info(f"Total embeddings in collection '{COLLECTION_NAME}': {embedding_collection.count()}")
     
     # Batch insert embeddings
     cursor = embeddings_db.cursor()
@@ -257,4 +283,4 @@ if __name__ == "__main__":
         sys.exit(0)
     except Exception as e:
         logger.error(f"Indexing failed: {str(e)}")
-        sys.exit(1) 
+        sys.exit(1)

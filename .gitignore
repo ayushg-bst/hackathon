@@ -30,6 +30,7 @@ backend/htmlcov/
 backend/.coverage
 backend/coverage.xml
 backend/*.cover
+backend/chroma*
 
 # React/Vite frontend
 frontend/node_modules/
@@ -92,3 +93,4 @@ models/
 # Application specific
 data/
 temp/ 
+backend/chroma_db/
