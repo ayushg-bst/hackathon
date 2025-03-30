@@ -195,10 +195,10 @@ async def search_code(search_query: SearchQuery):
         # Generate embedding for the query
         query_embedding = embedding_model.encode(query_text).tolist()
         
-        # Query ChromaDB collection
+        # Query ChromaDB collection - fetch more results initially for filtering
         results = embedding_collection.query(
             query_embeddings=[query_embedding],
-            n_results=10,
+            n_results=30,  # Fetch more results than we need to allow for filtering
             include=['documents', 'metadatas', 'distances']
         )
         
@@ -209,6 +209,10 @@ async def search_code(search_query: SearchQuery):
         if not all(key in results for key in ['documents', 'metadatas', 'distances']):
             raise HTTPException(status_code=500, detail="Unexpected response format from database")
         
+        # Normalize query for case-insensitive matching
+        normalized_query = query_text.lower()
+        query_terms = normalized_query.split()
+        
         # Extract and format results
         for i in range(len(results['documents'][0])):
             try:
@@ -216,16 +220,66 @@ async def search_code(search_query: SearchQuery):
                 metadata = results['metadatas'][0][i]
                 distance = results['distances'][0][i] if 'distances' in results else None
                 
-                processed_results.append({
-                    'file_path': metadata.get('file_path', 'Unknown'),
-                    'content': document,
-                    'start_char': metadata.get('start_char', 0),
-                    'end_char': metadata.get('end_char', 0),
-                    'distance': distance
-                })
+                # Check if the document contains any of the query terms (case-insensitive)
+                normalized_document = document.lower()
+                
+                # Calculate a keyword match score (0-1)
+                keyword_match_score = 0
+                term_matches = 0
+                for term in query_terms:
+                    if term in normalized_document:
+                        term_matches += 1
+                
+                if query_terms:
+                    keyword_match_score = term_matches / len(query_terms)
+                
+                # Only include results that have at least one query term
+                if term_matches > 0:
+                    # Calculate a combined relevance score
+                    # - Lower distance means better semantic match (so we use 1-distance)
+                    # - Higher keyword_match_score means better keyword match
+                    semantic_score = 1 - (distance or 0)
+                    combined_score = (semantic_score * 0.6) + (keyword_match_score * 0.4)
+                    
+                    # Find the best snippet that contains the query
+                    snippet = document
+                    if len(document) > 500:
+                        # If document is long, try to find a better snippet that includes query terms
+                        best_pos = -1
+                        for term in query_terms:
+                            pos = normalized_document.find(term)
+                            if pos != -1 and (best_pos == -1 or pos < best_pos):
+                                best_pos = pos
+                        
+                        if best_pos != -1:
+                            # Extract a window of text centered around the first occurrence
+                            start = max(0, best_pos - 150)
+                            end = min(len(document), best_pos + 350)
+                            snippet = document[start:end]
+                            # Add ellipsis if we're not showing the full document
+                            if start > 0:
+                                snippet = "..." + snippet
+                            if end < len(document):
+                                snippet = snippet + "..."
+                    
+                    processed_results.append({
+                        'file_path': metadata.get('file_path', 'Unknown'),
+                        'content': snippet,
+                        'start_char': metadata.get('start_char', 0),
+                        'end_char': metadata.get('end_char', 0),
+                        'distance': distance,
+                        'score': combined_score,
+                        'query': query_text  # Include original query for highlighting
+                    })
             except (IndexError, KeyError) as e:
                 print(f"Error processing result {i}: {str(e)}")
                 continue
+        
+        # Sort results by combined score (higher is better)
+        processed_results.sort(key=lambda x: x.get('score', 0), reverse=True)
+        
+        # Limit to top 10 results
+        processed_results = processed_results[:10]
         
         return processed_results
     
@@ -360,4 +414,4 @@ async def get_config():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     host = os.getenv("HOST", "0.0.0.0")
-    uvicorn.run("main:app", host=host, port=port, reload=True) 
+    uvicorn.run("main:app", host=host, port=port, reload=True)

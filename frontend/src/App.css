@@ -81,6 +81,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 70vh;
+  max-height: none; /* Allow content to determine height */
 }
 
 /* Search panel styles */
@@ -98,7 +100,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
+  min-height: 60vh;
+  height: auto; /* Allow content to determine height */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #ffffff;
+  padding: 16px;
+  padding-bottom: 32px; /* Add extra padding at bottom */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px; /* Add margin at bottom */
 }
 
 /* Empty state */
@@ -157,4 +168,4 @@ body {
   .main-body {
     padding: 16px;
   }
-} 
+}

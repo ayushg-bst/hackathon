@@ -45,6 +45,34 @@ const SearchPanel = ({ onResultSelect, repoPath }) => {
     return text.substring(0, maxLength) + '...';
   };
   
+  // Highlight search terms in the content
+  const highlightText = (text, searchQuery) => {
+    if (!text || !searchQuery) return text;
+    
+    const terms = searchQuery.trim().split(/\s+/).filter(term => term.length > 0);
+    if (terms.length === 0) return text;
+    
+    // Create a regular expression that matches any of the terms, case-insensitive
+    const regex = new RegExp(`(${terms.map(term => escapeRegExp(term)).join('|')})`, 'gi');
+    
+    // Split by the regex and map each part
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => {
+      // Check if this part matches any term (case-insensitive)
+      const isMatch = terms.some(term => part.toLowerCase() === term.toLowerCase());
+      
+      return isMatch ? 
+        <span key={i} className="search-highlight">{part}</span> : 
+        <span key={i}>{part}</span>;
+    });
+  };
+  
+  // Helper function to escape special characters in regex
+  const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+  
   const handleResultClick = (result) => {
     console.log("Search result clicked:", result);
     
@@ -116,11 +144,11 @@ const SearchPanel = ({ onResultSelect, repoPath }) => {
               >
                 <div className="result-file">{result.file_path}</div>
                 <div className="result-content">
-                  {truncateText(result.content)}
+                  {highlightText(result.content, result.query || query)}
                 </div>
                 <div className="result-meta">
                   <span className="relevance">
-                    Relevance: {((1 - (result.distance || 0)) * 100).toFixed(0)}%
+                    Relevance: {Math.round((result.score || (1 - (result.distance || 0))) * 100)}%
                   </span>
                 </div>
               </div>
@@ -132,4 +160,4 @@ const SearchPanel = ({ onResultSelect, repoPath }) => {
   );
 };
 
-export default SearchPanel; 
+export default SearchPanel;

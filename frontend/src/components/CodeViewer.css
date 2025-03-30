@@ -7,6 +7,8 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  min-height: 400px;
+  z-index: 10;
 }
 
 .code-viewer-header {
@@ -47,6 +49,9 @@
 
 .editor-container {
   flex-grow: 1;
+  min-height: 350px;
+  position: relative;
+  z-index: 5;
 }
 
 .loading-indicator,

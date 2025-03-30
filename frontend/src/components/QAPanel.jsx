@@ -49,12 +49,6 @@ const QAPanel = ({ currentFilePath }) => {
           rows={3}
         />
         
-        {currentFilePath && (
-          <div className="qa-context-info">
-            Using context from: <span className="qa-file-path">{currentFilePath}</span>
-          </div>
-        )}
-        
         <button 
           onClick={handleAsk} 
           className="qa-button"
@@ -63,6 +57,12 @@ const QAPanel = ({ currentFilePath }) => {
           {isLoading ? 'Thinking...' : 'Ask AI'}
         </button>
       </div>
+      
+      {currentFilePath && (
+        <div className="qa-context-info">
+          Using context from: <span className="qa-file-path">{currentFilePath}</span>
+        </div>
+      )}
       
       {isLoading && (
         <div className="qa-loading">
@@ -86,4 +86,4 @@ const QAPanel = ({ currentFilePath }) => {
   );
 };
 
-export default QAPanel; 
+export default QAPanel;

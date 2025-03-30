@@ -19,7 +19,6 @@ function App() {
     const fetchConfig = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:8000/config');
-        console.log('Config loaded:', response.data);
         setConfig(response.data);
       } catch (error) {
         console.error('Failed to load configuration:', error);
@@ -29,37 +28,27 @@ function App() {
     fetchConfig();
   }, []);
 
-  useEffect(() => {
-    console.log("Current selected file:", selectedFile);
-  }, [selectedFile]);
-
   const handlePathChange = (newPath) => {
-    console.log("App: Path change called with:", newPath);
     // Check if the path is valid
     if (newPath === undefined || newPath === null) {
-      console.error("Invalid path received:", newPath);
       return;
     }
     
     // Clean up the path - remove any leading/trailing whitespace
     const cleanPath = newPath.trim();
-    console.log("Cleaned path:", cleanPath);
     
     setCurrentPath(cleanPath);
     setSelectedFile(null);
   };
 
   const handleFileSelect = async (filePath) => {
-    console.log("App: File select called with:", filePath);
     // Check if the path is valid
     if (filePath === undefined || filePath === null) {
-      console.error("Invalid file path received:", filePath);
       return;
     }
     
     // Clean up the path - remove any leading/trailing whitespace
     const cleanPath = filePath.trim();
-    console.log("Cleaned file path:", cleanPath);
     
     // Force re-render of the CodeViewer by changing the key
     setForceRender(prev => prev + 1);
@@ -68,52 +57,32 @@ function App() {
   };
 
   const handleSearchResultSelect = (filePath, startChar, endChar) => {
-    console.log(`App: handleSearchResultSelect called with filePath: ${filePath}, startChar: ${startChar}, endChar: ${endChar}`);
-    
     if (!filePath) {
-      console.error("App: Invalid search result path received:", filePath);
       return;
     }
     
-    console.log(`App: Current config.repo_path: ${config.repo_path}`);
-    
     // Handle potential absolute paths
     let processedPath = filePath.trim();
-    console.log(`App: Path after trimming: ${processedPath}`);
     
     // If this is an absolute path matching our repository structure,
     // convert it to a relative path for the file browser
     if (config.repo_path && processedPath.startsWith(config.repo_path)) {
-      console.log(`App: Path starts with repo_path. Removing prefix.`);
       processedPath = processedPath.slice(config.repo_path.length);
-      console.log(`App: Path after removing repo prefix: ${processedPath}`);
-    } else {
-      console.log(`App: Path does not start with repo_path or repo_path is not set. No prefix removed.`);
     }
     
     // Remove leading slashes
     if (processedPath.startsWith('/')) {
-      console.log(`App: Path starts with '/'. Removing leading slashes.`);
       processedPath = processedPath.replace(/^\/+/, '');
-      console.log(`App: Path after removing leading slashes: ${processedPath}`);
     }
-    
-    console.log("App: Final processed path for search result:", processedPath);
     
     // Force re-render of the CodeViewer by changing the key
     setForceRender(prev => prev + 1);
     setSelectedFile(processedPath);
     setSelectedPosition({ start: startChar, end: endChar });
-    
-    // Debug: Will this file actually load?
-    console.log("App: Setting selectedFile to:", processedPath);
   };
 
   const handleDefinitionSelect = (filePath, lineNumber) => {
-    console.log("Definition selected:", filePath, lineNumber);
-    
     if (!filePath) {
-      console.error("Invalid definition path:", filePath);
       return;
     }
     
@@ -124,16 +93,12 @@ function App() {
     // convert it to a relative path for the file browser
     if (config.repo_path && processedPath.startsWith(config.repo_path)) {
       processedPath = processedPath.slice(config.repo_path.length);
-      console.log(`Removed repo prefix, now: ${processedPath}`);
     }
     
     // Remove leading slashes
     if (processedPath.startsWith('/')) {
       processedPath = processedPath.replace(/^\/+/, '');
-      console.log(`Removed leading slashes, now: ${processedPath}`);
     }
-    
-    console.log("Processed path for definition:", processedPath);
     
     // Force re-render of the CodeViewer by changing the key
     setForceRender(prev => prev + 1);
@@ -141,9 +106,6 @@ function App() {
     // For definitions, we use line numbers instead of character positions
     // Set the position to highlight the entire line
     setSelectedPosition({ start: lineNumber, end: lineNumber });
-    
-    // Debug: Will this file actually load?
-    console.log("CodeViewer will attempt to load:", processedPath);
   };
 
   return (
@@ -171,30 +133,76 @@ function App() {
         </div>
         
         <div className="main-body">
-          <SearchPanel 
-            onResultSelect={handleSearchResultSelect}
-            repoPath={config.repo_path}
-          />
-          
-          {selectedFile ? (
-            <div className="file-view">
-              <CodeViewer 
-                key={selectedFile}
-                filePath={selectedFile} 
-                highlightStart={selectedPosition.start}
-                highlightEnd={selectedPosition.end}
+          {!selectedFile ? (
+            // When no file is selected, show search panel
+            <div className="search-container">
+              <SearchPanel 
+                onResultSelect={handleSearchResultSelect}
                 repoPath={config.repo_path}
               />
               
-              <QueryPanel 
-                selectedFile={selectedFile}
-                repoPath={config.repo_path}
-              />
+              <div className="empty-state" style={{ marginTop: '20px' }}>
+                <div className="empty-state-icon">📁</div>
+                <p>Select a file from the file browser or search results to view its content</p>
+              </div>
             </div>
           ) : (
-            <div className="empty-state">
-              <div className="empty-state-icon">📁</div>
-              <p>Select a file from the file browser to view its content</p>
+            // When a file is selected, show file view
+            <div className="content-area" style={{ 
+              flex: '1', 
+              display: 'flex', 
+              flexDirection: 'column',
+              minHeight: '500px',
+              height: 'auto',
+              maxHeight: 'none', /* Remove any height constraints */
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              overflow: 'visible', 
+              backgroundColor: '#fff',
+              marginBottom: '24px' /* Add bottom margin */
+            }}>
+              <div className="file-view" style={{ overflow: 'visible' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px', 
+                  backgroundColor: '#e6f7ff', 
+                  marginBottom: '10px', 
+                  borderRadius: '4px',
+                  border: '2px solid #1890ff'
+                }}>
+                  <div>
+                    <strong>Selected File:</strong> {selectedFile}
+                  </div>
+                  <button 
+                    onClick={() => setSelectedFile(null)}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#1890ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Back to Search
+                  </button>
+                </div>
+                
+                <CodeViewer 
+                  key={selectedFile}
+                  filePath={selectedFile} 
+                  highlightStart={selectedPosition.start}
+                  highlightEnd={selectedPosition.end}
+                  repoPath={config.repo_path}
+                />
+                
+                <QueryPanel 
+                  selectedFile={selectedFile}
+                  repoPath={config.repo_path}
+                />
+              </div>
             </div>
           )}
         </div>

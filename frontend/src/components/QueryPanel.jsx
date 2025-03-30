@@ -43,14 +43,24 @@ const QueryPanel = ({ selectedFile }) => {
       <h3>Ask about the code</h3>
       
       <div className="query-form">
-        <textarea
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask a question about the codebase..."
-          className="query-input"
-          rows={3}
-        />
+        <div className="query-input-row">
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a question about the codebase..."
+            className="query-input"
+            rows={3}
+          />
+          <button 
+            onClick={handleSubmit} 
+            className="query-button"
+            disabled={isLoading || !question.trim()}
+          >
+            {isLoading ? 'Thinking...' : 'Ask AI'}
+          </button>
+        </div>
+        
         <div className="query-help">
           {selectedFile ? 
             <span>Currently providing context from: <strong>{selectedFile}</strong></span> : 
@@ -58,13 +68,6 @@ const QueryPanel = ({ selectedFile }) => {
           }
           <div>Press Ctrl+Enter to submit</div>
         </div>
-        <button 
-          onClick={handleSubmit} 
-          className="query-button"
-          disabled={isLoading || !question.trim()}
-        >
-          {isLoading ? 'Thinking...' : 'Ask AI'}
-        </button>
       </div>
 
       {isLoading && (
@@ -94,4 +97,4 @@ const QueryPanel = ({ selectedFile }) => {
   );
 };
 
-export default QueryPanel; 
+export default QueryPanel;

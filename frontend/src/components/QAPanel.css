@@ -16,13 +16,14 @@
 
 .qa-input-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* Change to row to place elements side by side */
   gap: 12px;
   margin-bottom: 20px;
+  align-items: flex-start; /* Align items at the top */
 }
 
 .qa-input {
-  width: 100%;
+  flex: 1; /* Take up available space */
   padding: 12px 16px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -42,7 +43,8 @@
 .qa-context-info {
   font-size: 12px;
   color: #666;
-  margin: 4px 0;
+  margin: 4px 0 8px; /* Adjust vertical margin */
+  width: 100%; /* Take full width */
 }
 
 .qa-file-path {
@@ -51,8 +53,8 @@
 }
 
 .qa-button {
-  align-self: flex-end;
-  padding: 10px 20px;
+  align-self: flex-start; /* Align at the top instead of flex-end */
+  padding: 10px 16px;
   background-color: #0066cc;
   color: white;
   border: none;
@@ -61,6 +63,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  white-space: nowrap; /* Prevent button text from wrapping */
+  height: 45px; /* Fixed height for the button */
 }
 
 .qa-button:hover {
@@ -116,4 +120,6 @@
   margin: 0;
   color: #333;
   border: 1px solid #eee;
-} 
+  max-height: 400px; /* Add max height limit */
+  overflow-y: auto; /* Enable vertical scrolling */
+}

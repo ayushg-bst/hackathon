@@ -13,13 +13,10 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
   // Helper function to handle editor mounting
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
-    console.log('CodeViewer: Editor instance mounted');
     
     // Check if content was already loaded BEFORE mount completed
     if (codeContent) {
-      console.log('CodeViewer: Content exists on mount, calling editor.setValue()');
       editor.setValue(codeContent);
-      console.log('CodeViewer: Finished calling editor.setValue() from handleEditorDidMount'); // Log after call
     }
   }
 
@@ -102,16 +99,11 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
         // Use the filePath prop directly, assuming it's already normalized by App.jsx
         const normalizedPath = filePath;
         
-        // Log the path being requested for debugging
-        console.log('CodeViewer: Fetching file content for:', normalizedPath);
-        
         // Encode URL components to handle spaces and special characters
         const encodedPath = encodeURIComponent(normalizedPath);
-        console.log('Encoded URL path:', encodedPath);
         
         // Use the browser API with the normalized path
         const url = `http://127.0.0.1:8000/browse/${encodedPath}`;
-        console.log('Full request URL:', url);
         
         // Track the request and response headers for debugging
         const config = {
@@ -124,36 +116,24 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
         
         const response = await axios.get(url, config);
         
-        console.log('CodeViewer: Response status:', response.status);
-        
-        if (isMounted && response.data && typeof response.data.content === 'string') { // Check isMounted
-          console.log('CodeViewer: Inside success block (isMounted=true, valid response)'); // Log 1
+        if (isMounted && response.data && typeof response.data.content === 'string') {
           const content = response.data.content;
-          console.log(`CodeViewer: Content retrieved, length: ${content.length}`); // Log 2 (replaces old log)
           
-          console.log('CodeViewer: About to call setCodeContent'); // Log 3
           setCodeContent(content);
-          console.log('CodeViewer: Finished calling setCodeContent'); // Log 4
           
           // Calculate basic file info
-          console.log('CodeViewer: About to calculate file info'); // Log 5
           const lines = content.split('\n').length;
           const size = new Blob([content]).size;
-          console.log('CodeViewer: Finished calculating file info'); // Log 6
           setFileInfo({
             lines,
             size: size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`
           });
-        } else if (isMounted) { // Check isMounted
-          console.error('CodeViewer: Unexpected response format or component unmounted:', response.data);
-          setError('Received an invalid response format from the server or component unmounted');
+        } else if (isMounted) {
+          setError('Received an invalid response format from the server');
           setCodeContent('');
         }
       } catch (err) {
-        console.error('Error fetching file content:', err);
-        if (isMounted) { // Check isMounted
-          console.error('Error details:', err.response?.data);
-          
+        if (isMounted) {
           let errorMessage = 'Failed to fetch file content';
           if (err.response?.status === 404) {
             errorMessage = `File not found: ${filePath}`;
@@ -167,7 +147,7 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
           setCodeContent('');
         }
       } finally {
-        if (isMounted) { // Check isMounted
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -177,31 +157,22 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
     fetchFileContent();
     
     return () => {
-      isMounted = false; // Set flag to false on unmount
-      console.log("CodeViewer cleanup for path:", filePath); // Log cleanup
+      isMounted = false;
     };
   }, [filePath]);
 
-  // NEW useEffect: Update editor instance when codeContent changes and ref is ready
+  // Update editor instance when codeContent changes and ref is ready
   useEffect(() => {
-    console.log(`CodeViewer: Second useEffect running. editorRef.current is ${editorRef.current ? 'set' : 'null'}. codeContent length is ${codeContent?.length ?? 0}.`); // Log state inside effect
     if (editorRef.current && codeContent) {
       // Check if the editor content is already the same to avoid unnecessary updates
       if (editorRef.current.getValue() !== codeContent) {
-        console.log('CodeViewer: codeContent changed, ref exists. Calling editor.setValue()');
         editorRef.current.setValue(codeContent);
-        console.log('CodeViewer: Finished calling editor.setValue() via second useEffect'); // Log after call
-      } else {
-         console.log('CodeViewer: Second useEffect - content is same as editor value, skipping setValue.'); // Add log for same content case
       }
     } else if (editorRef.current && !codeContent) {
        // Handle clearing the editor if filePath becomes null/empty
-       console.log('CodeViewer: codeContent is empty, ref exists. Clearing editor.');
        editorRef.current.setValue('');
-    } else {
-        console.log(`CodeViewer: Second useEffect - condition not met (editorRef: ${!!editorRef.current}, codeContent: ${!!codeContent})`); // Log if condition failed
     }
-  }, [codeContent]); // Depend only on codeContent
+  }, [codeContent]);
 
   // Determine language for syntax highlighting
   const language = getLanguageFromPath(filePath);
@@ -232,11 +203,6 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
         </div>
         <div className="error-message">
           <div>Error: {error}</div>
-          <details>
-            <summary>Debug Information</summary>
-            <pre>File path received: {filePath}</pre>
-            <pre>URL path used: {encodeURIComponent(filePath)}</pre>
-          </details>
         </div>
       </div>
     );
@@ -264,6 +230,7 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
           <span className="file-stats">{fileInfo.lines} lines • {fileInfo.size}</span>
         </div>
       </div>
+      
       <div className="editor-container">
         <Editor
           height="100%"
@@ -283,9 +250,28 @@ const CodeViewer = ({ filePath, highlightStart, highlightEnd, repoPath }) => {
           }}
           onMount={handleEditorDidMount}
         />
+        
+        {/* Fallback display - a simple textarea showing the code content */}
+        {codeContent && !editorRef.current && (
+          <textarea 
+            style={{
+              width: '100%',
+              height: '300px',
+              fontFamily: 'monospace',
+              fontSize: '14px',
+              padding: '10px',
+              backgroundColor: '#1e1e1e',
+              color: '#d4d4d4',
+              border: 'none',
+              resize: 'none'
+            }}
+            readOnly
+            value={codeContent}
+          />
+        )}
       </div>
     </div>
   );
 };
 
-export default CodeViewer; 
+export default CodeViewer;

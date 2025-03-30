@@ -3,8 +3,14 @@
   border-radius: 8px;
   padding: 16px;
   margin-top: 16px;
+  margin-bottom: 32px; /* Increase bottom margin */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #e0e0e0;
+  overflow: visible; /* Ensure content isn't cropped */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-shrink: 0; /* Prevent panel from shrinking */
 }
 
 .query-panel h3 {
@@ -20,10 +26,18 @@
   flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
+  width: 100%; /* Ensure form takes full width */
+}
+
+.query-input-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: flex-start; /* Align items at the top */
 }
 
 .query-input {
-  width: 100%;
+  flex: 1; /* Take up available space */
   padding: 12px;
   font-size: 14px;
   border: 1px solid #e0e0e0;
@@ -50,8 +64,10 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  align-self: flex-end;
-  min-width: 120px;
+  min-width: 100px;
+  height: 45px; /* Fixed height for the button */
+  align-self: flex-start; /* Align at the top */
+  white-space: nowrap; /* Prevent button text from wrapping */
 }
 
 .query-button:hover:not(:disabled) {
@@ -109,10 +125,12 @@
 
 .answer-container {
   margin-top: 24px;
+  margin-bottom: 24px; /* Increase bottom margin */
   border-radius: 6px;
   background-color: #f8f9fa;
   border: 1px solid #e0e0e0;
-  overflow: hidden;
+  overflow: visible; /* Allow content to extend past container if needed */
+  width: 100%; /* Ensure container takes full width */
 }
 
 .answer-container h4 {
@@ -130,6 +148,9 @@
   color: #24292e;
   font-size: 14px;
   line-height: 1.6;
+  max-height: 600px; /* Increase max height */
+  overflow-y: auto; /* Vertical scrolling */
+  overscroll-behavior: contain; /* Improve scroll behavior */
 }
 
 .answer-content p {
@@ -150,4 +171,4 @@
   font-size: 13px;
   border: 1px solid #e0e0e0;
   line-height: 1.5;
-} 
+}

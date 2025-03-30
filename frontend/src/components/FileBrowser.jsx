@@ -6,33 +6,19 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     const fetchDirectoryContents = async () => {
       setLoading(true);
       setError(null);
-      setDebugInfo(null);
       
       try {
-        console.log(`Fetching directory contents for path: ${currentPath}`);
         const response = await axios.get(`http://127.0.0.1:8000/browse/${currentPath}`, {
           timeout: 10000, // 10 second timeout
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           }
-        });
-        
-        console.log('API response:', response.data);
-        
-        // Store debug info
-        setDebugInfo({
-          status: response.status,
-          statusText: response.statusText,
-          hasData: !!response.data,
-          hasItems: response.data && Array.isArray(response.data.items),
-          itemCount: response.data && response.data.items ? response.data.items.length : 0
         });
         
         if (response.data && Array.isArray(response.data.items)) {
@@ -48,24 +34,10 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
           
           setItems(sortedItems);
         } else {
-          console.error('Unexpected response format:', response.data);
           setItems([]);
           setError('Unexpected response format from server');
         }
       } catch (err) {
-        console.error('Error fetching directory contents:', err);
-        console.error('Error details:', err.response?.data);
-        
-        setDebugInfo({
-          errorMessage: err.message,
-          errorResponse: err.response ? {
-            status: err.response.status,
-            statusText: err.response.statusText,
-            data: err.response.data
-          } : null,
-          errorStack: err.stack
-        });
-        
         setError(err.response?.data?.detail || err.message || 'Failed to fetch directory contents');
       } finally {
         setLoading(false);
@@ -77,19 +49,14 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
 
   const handleItemClick = (item) => {
     if (!item) {
-      console.error('FileBrowser: Attempted to click on null/undefined item');
       return;
     }
     
     const newPath = currentPath ? `${currentPath}/${item.name}` : item.name;
-    console.log(`FileBrowser: Clicked on item: ${item.name}, new path: ${newPath}`);
-    console.log(`FileBrowser: Item object:`, item);
     
     if (item.is_dir) {
-      console.log(`FileBrowser: Navigating to directory: ${newPath}`);
       onPathChange(newPath);
     } else {
-      console.log(`FileBrowser: Opening file: ${newPath}`);
       // Ensure the path is properly trimmed
       onFileSelect(newPath.trim());
     }
@@ -101,7 +68,6 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
     const pathParts = currentPath.split('/');
     pathParts.pop();
     const parentPath = pathParts.join('/');
-    console.log(`Navigating up to: ${parentPath}`);
     onPathChange(parentPath);
   };
 
@@ -193,12 +159,6 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
       {error && (
         <div className="error">
           <p>Error: {error}</p>
-          {debugInfo && (
-            <details>
-              <summary>Debug Info</summary>
-              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-            </details>
-          )}
         </div>
       )}
       
@@ -219,12 +179,6 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
         ) : !loading && !error ? (
           <div className="empty-directory">
             This directory is empty or no items returned
-            {debugInfo && (
-              <details>
-                <summary>Debug Info</summary>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-              </details>
-            )}
           </div>
         ) : null}
       </ul>
@@ -232,4 +186,4 @@ const FileBrowser = ({ currentPath, onPathChange, onFileSelect }) => {
   );
 };
 
-export default FileBrowser; 
+export default FileBrowser;
