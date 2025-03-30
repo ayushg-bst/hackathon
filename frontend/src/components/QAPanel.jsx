@@ -37,41 +37,62 @@ const QAPanel = ({ currentFilePath }) => {
   };
 
   return (
-    <div className="qa-panel">
-      <h3>Ask about the code</h3>
+    <div className="qa-panel" style={{
+      height: '100%',
+      overflowY: 'auto',
+      padding: '15px',
+      boxSizing: 'border-box',
+      backgroundColor: '#ffffff'
+    }}>
+      <h3 style={{ marginBottom: '15px' }}>Ask about the code</h3>
       
-      <div className="qa-input-container">
+      <div className="qa-input-container" style={{ 
+        display: 'flex', 
+        alignItems: 'flex-start', 
+        gap: '10px',
+        marginBottom: '15px'
+      }}>
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask a question about this code..."
           className="qa-input"
-          rows={3}
+          rows={4}
+          style={{ 
+            flexGrow: 1,
+            resize: 'vertical',
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '8px',
+            borderRadius: '4px',
+            border: '1px solid #ddd'
+          }}
         />
         
         <button 
           onClick={handleAsk} 
           className="qa-button"
           disabled={isLoading || !question.trim()}
+          style={{ flexShrink: 0 }}
         >
           {isLoading ? 'Thinking...' : 'Ask AI'}
         </button>
       </div>
       
       {currentFilePath && (
-        <div className="qa-context-info">
-          Using context from: <span className="qa-file-path">{currentFilePath}</span>
+        <div className="qa-context-info" style={{ marginBottom: '15px', fontSize: '0.85em', color: '#555' }}>
+          Using context from: <span className="qa-file-path" style={{ fontWeight: 'bold' }}>{currentFilePath}</span>
         </div>
       )}
       
       {isLoading && (
-        <div className="qa-loading">
+        <div className="qa-loading" style={{ marginBottom: '15px' }}>
           <p>AI is analyzing the code and formulating an answer...</p>
         </div>
       )}
       
       {error && (
-        <div className="qa-error">
+        <div className="qa-error" style={{ marginBottom: '15px' }}>
           <p>{error}</p>
         </div>
       )}
@@ -79,7 +100,16 @@ const QAPanel = ({ currentFilePath }) => {
       {answer && (
         <div className="qa-answer">
           <h4>Answer:</h4>
-          <pre className="qa-answer-text">{answer}</pre>
+          <pre className="qa-answer-text" style={{
+            padding: '10px',
+            backgroundColor: '#f0f0f0',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            maxWidth: '100%',
+            overflowX: 'auto'
+          }}>{answer}</pre>
         </div>
       )}
     </div>

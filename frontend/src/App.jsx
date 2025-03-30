@@ -13,6 +13,7 @@ function App() {
   const [selectedPosition, setSelectedPosition] = useState({ start: 0, end: 0 });
   const [forceRender, setForceRender] = useState(0);
   const [config, setConfig] = useState({ repo_path: '' });
+  const [isQAPanelOpen, setIsQAPanelOpen] = useState(false); // Start closed
 
   // Fetch configuration from backend
   useEffect(() => {
@@ -81,6 +82,8 @@ function App() {
     setSelectedPosition({ start: startChar, end: endChar });
   };
 
+  const toggleQAPanel = () => setIsQAPanelOpen(!isQAPanelOpen);
+
   const handleDefinitionSelect = (filePath, lineNumber) => {
     if (!filePath) {
       return;
@@ -147,34 +150,51 @@ function App() {
               </div>
             </div>
           ) : (
-            // When a file is selected, show file view
-            <div className="content-area" style={{ 
-              flex: '1', 
-              display: 'flex', 
+            // When a file is selected, show file view with column layout
+            <div className="main-content-column" style={{
+              display: 'flex',
               flexDirection: 'column',
-              minHeight: '500px',
-              height: 'auto',
-              maxHeight: 'none', /* Remove any height constraints */
+              flexGrow: 1,
+              height: '100%',
               border: '1px solid #ddd',
               borderRadius: '8px',
-              overflow: 'visible', 
+              overflow: 'hidden',
               backgroundColor: '#fff',
-              marginBottom: '24px' /* Add bottom margin */
+              marginBottom: '24px',
+              position: 'relative'
             }}>
-              <div className="file-view" style={{ overflow: 'visible' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px', 
-                  backgroundColor: '#e6f7ff', 
-                  marginBottom: '10px', 
-                  borderRadius: '4px',
-                  border: '2px solid #1890ff'
+              {/* Header Section */}
+              <div className="main-content-header" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                height: '40px',
+                padding: '0 15px',
+                borderBottom: '1px solid #ccc',
+                flexShrink: 0
+              }}>
+                <div>
+                  <strong>Selected File:</strong> {selectedFile}
+                </div>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px'
                 }}>
-                  <div>
-                    <strong>Selected File:</strong> {selectedFile}
-                  </div>
+                  {/* Toggle button for QA Panel */}
+                  <button
+                    onClick={toggleQAPanel}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#1890ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    {isQAPanelOpen ? '>> Hide Q&A' : '<< Ask AI'}
+                  </button>
                   <button 
                     onClick={() => setSelectedFile(null)}
                     style={{
@@ -189,19 +209,58 @@ function App() {
                     Back to Search
                   </button>
                 </div>
+              </div>
+              
+              {/* Body Section - horizontal layout for code viewer and QA panel */}
+              <div className="main-content-body" style={{
+                display: 'flex',
+                flexDirection: 'row',
+                flexGrow: 1,
+                overflow: 'hidden',
+                minHeight: 0
+              }}>
+                {/* Code Viewer wrapper */}
+                <div className="file-view" style={{ 
+                  flexGrow: 1,
+                  flexShrink: 1,
+                  flexBasis: '0%',
+                  height: '100%',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  transition: 'width 0.3s ease, flex-basis 0.3s ease'
+                }}>
+                  <CodeViewer 
+                    key={selectedFile}
+                    filePath={selectedFile} 
+                    highlightStart={selectedPosition.start}
+                    highlightEnd={selectedPosition.end}
+                    repoPath={config.repo_path}
+                  />
+                </div>
                 
-                <CodeViewer 
-                  key={selectedFile}
-                  filePath={selectedFile} 
-                  highlightStart={selectedPosition.start}
-                  highlightEnd={selectedPosition.end}
-                  repoPath={config.repo_path}
-                />
-                
-                <QueryPanel 
-                  selectedFile={selectedFile}
-                  repoPath={config.repo_path}
-                />
+                {/* QA Panel wrapper div - conditionally sized based on isQAPanelOpen */}
+                <div style={{ 
+                  width: isQAPanelOpen ? '350px' : '0px', 
+                  flexShrink: 0, 
+                  transition: 'width 0.3s ease', 
+                  overflow: 'hidden', 
+                  height: '100%', 
+                  borderLeft: isQAPanelOpen ? '1px solid #ccc' : 'none',
+                  backgroundColor: '#f9f9f9'
+                }}>
+                  {/* Always render QueryPanel, but it will be hidden when width is 0 */}
+                  <div style={{ 
+                    width: '350px', 
+                    height: '100%', 
+                    overflowY: 'auto',
+                    padding: isQAPanelOpen ? '15px' : '0'
+                  }}>
+                    <QueryPanel 
+                      selectedFile={selectedFile}
+                      repoPath={config.repo_path}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
